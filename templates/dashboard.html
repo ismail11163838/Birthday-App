@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard</title>
+
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+
+<body class="dashboard-page">
+
+<div class="dashboard">
+
+<h1>🎂 Birthday Admin Dashboard</h1>
+
+<div class="stats">
+
+<div class="stat-card">
+<h2>{{ birthdays|length }}</h2>
+<p>Total Birthdays</p>
+</div>
+
+<div class="stat-card">
+<h2>👑</h2>
+<p>Admin</p>
+</div>
+
+<div class="stat-card">
+<h2>🎉</h2>
+<p>Premium Version</p>
+</div>
+
+</div>
+
+<form action="/create" method="POST" enctype="multipart/form-data">
+
+<input type="text"
+name="name"
+placeholder="Birthday Name"
+required>
+
+<textarea
+name="wish"
+placeholder="Birthday Wish"
+required></textarea>
+
+<input
+type="text"
+name="code"
+placeholder="Access Code (Example: 1433)"
+required>
+
+<label>Unlock Date</label>
+<input type="date" name="unlock_date">
+
+<label>Unlock Time</label>
+<input type="time" name="unlock_time">
+
+<label>📸 Photo</label>
+
+<input
+type="file"
+name="photo"
+accept="image/*">
+
+<label>🎵 Music</label>
+
+<input
+type="file"
+name="music"
+accept=".mp3,audio/*">
+
+<label>🖼 Background Image</label>
+
+<input
+type="file"
+name="background"
+accept="image/*">
+
+<button type="submit">
+➕ Create Birthday
+</button>
+
+</form>
+
+<hr>
+
+<h2>📋 Birthday List</h2>
+
+{% if birthdays %}
+
+{% for b in birthdays %}
+
+<div class="card">
+
+<hr>
+
+<p><strong>🎂 Name:</strong> {{ b.name }}</p>
+
+<p><strong>💌 Wish:</strong> {{ b.wish }}</p>
+
+<p><strong>🔑 Code:</strong> {{ b.code }}</p>
+
+{% if b.music %}
+<audio controls style="width:100%;">
+    <source src="{{ url_for('static', filename='uploads/music/' + b.music) }}">
+</audio>
+{% endif %}
+
+<br><br>
+
+<a href="/edit/{{ b.id }}">✏️ Edit</a>
+
+&nbsp;&nbsp;
+
+<a href="/delete/{{ b.id }}"
+onclick="return confirm('Delete this Birthday?')">
+🗑 Delete
+</a>
+
+<p>
+🔗
+<a href="/birthday/{{ b.slug }}" target="_blank">
+Open Birthday Page
+</a>
+</p>
+
+{% if b.photo %}
+<img
+src="{{ url_for('static', filename='uploads/photos/' + b.photo) }}"
+style="width:90px;height:90px;border-radius:50%;object-fit:cover;border:3px solid white;">
+{% endif %}
+
+<h3>{{ b.name }}</h3>
+
+<p>{{ b.wish }}</p>
+
+<p><b>Code:</b> {{ b.code }}</p>
+
+<br><br>
+<input
+type="text"
+value="{{ request.host_url }}login"
+readonly>
+
+<br><br>
+
+<button
+onclick="navigator.clipboard.writeText('{{ request.host_url }}login')">
+🔗 Copy Link
+</button>
+</div>
+
+{% endfor %}
+
+{% else %}
+
+<p>No Birthday Created.</p>
+
+{% endif %}
+
+<hr>
+
+<h2>🔐 Change Admin Password</h2>
+
+<form action="/change-admin-password" method="POST">
+
+<input
+type="password"
+name="password"
+placeholder="New Password"
+required>
+
+<button>
+Save Password
+</button>
+
+</form>
+
+</div>
+
+<script src="{{ url_for('static', filename='js/script.js') }}"></script>
+
+</body>
+</html>
+

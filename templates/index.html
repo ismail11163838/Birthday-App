@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Happy Birthday Nusrat ❤️</title>
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+
+<body>
+
+<div class="container">
+
+    <h1>🎂 Happy Birthday 🎂</h1>
+
+    <h2 id="name">{{ data.name }}</h2>
+
+    {% if data.photo %}
+    <img
+    src="{{ url_for('static', filename='uploads/photos/' + data.photo) }}"
+    class="photo">
+    {% endif %}
+
+<div id="gift-box" onclick="openGift()">
+    🎁
+</div>
+    <button onclick="openGift()">
+    🎁 Open Surprise
+    </button>
+
+    <div id="message" style="display:none;">
+
+        <h3>
+            <h3>💖 শুভ জন্মদিন {{ data.name }} 💖</h3>
+        </h3>
+
+        <p>{{ data.wish }}</p>
+
+        <h2>
+            ❤️ From Ismail ❤️
+        </h2>
+
+    </div>
+
+</div>
+
+{% if data.music %}
+<audio id="bgmusic" loop>
+    <source src="{{ url_for('static', filename='uploads/music/' + data.music) }}" type="audio/mpeg">
+</audio>
+{% endif %}
+
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+<script src="{{ url_for('static', filename='js/script.js') }}"></script>
+
+<canvas id="fireworks"></canvas>
+<script src="/static/js/fireworks.js"></script>
+</body>
+<div id="effects"></div>
+</html>
+

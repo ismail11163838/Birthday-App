@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Edit Birthday</title>
+
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+
+<body class="dashboard-page">
+
+<div class="dashboard">
+
+<h1>✏️ Edit Birthday</h1>
+
+<form method="POST">
+
+<input
+type="text"
+name="name"
+value="{{ birthday.name }}"
+required>
+
+<textarea
+name="wish"
+required>{{ birthday.wish }}</textarea>
+
+<input
+type="text"
+name="code"
+value="{{ birthday.code }}"
+required>
+
+<button type="submit">
+💾 Save Changes
+</button>
+
+</form>
+
+<br>
+
+<a href="/dashboard">⬅ Back to Dashboard</a>
+
+</div>
+
+</body>
+</html>

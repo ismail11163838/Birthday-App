@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Surprise Locked</title>
+
+<link rel="stylesheet" href="/static/css/style.css">
+
+<style>
+body{
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    min-height:100vh;
+    background:linear-gradient(135deg,#ff5ca8,#ff9ecf);
+    color:#fff;
+    text-align:center;
+}
+
+.lock-box{
+    background:rgba(255,255,255,.15);
+    backdrop-filter:blur(15px);
+    padding:30px;
+    border-radius:25px;
+    width:90%;
+    max-width:420px;
+    box-shadow:0 10px 30px rgba(0,0,0,.3);
+}
+
+#countdown{
+    font-size:34px;
+    font-weight:bold;
+    margin-top:20px;
+}
+
+h1{
+    font-size:40px;
+}
+
+p{
+    margin-top:15px;
+    font-size:18px;
+}
+</style>
+
+</head>
+
+<body>
+
+<div class="lock-box">
+
+<h1>🔒</h1>
+
+<h2>{{ name }}</h2>
+
+<p>Surprise এখনো Unlock হয়নি</p>
+
+<div id="countdown">Loading...</div>
+
+</div>
+<script>
+
+const unlock = new Date("{{ unlock_date }}T{{ unlock_time }}").getTime();
+
+function flashEffect(){
+    document.body.classList.add("flash");
+
+    setTimeout(()=>{
+        document.body.classList.remove("flash");
+    },250);
+}
+
+function updateCountdown(){
+
+    const now = new Date().getTime();
+
+    const diff = unlock - now;
+
+    if(diff <= 0){
+
+        document.getElementById("countdown").innerHTML = "3";
+        flashEffect();
+
+        setTimeout(()=>{
+            document.getElementById("countdown").innerHTML = "2";
+            flashEffect();
+        },1000);
+
+        setTimeout(()=>{
+            document.getElementById("countdown").innerHTML = "1";
+            flashEffect();
+        },2000);
+
+        setTimeout(()=>{
+            location.href="/birthday";
+        },3000);
+
+        return;
+    }
+
+    const d=Math.floor(diff/86400000);
+    const h=Math.floor((diff%86400000)/3600000);
+    const m=Math.floor((diff%3600000)/60000);
+    const s=Math.floor((diff%60000)/1000);
+
+    document.getElementById("countdown").innerHTML =
+        d+"d : "+h+"h : "+m+"m : "+s+"s";
+
+}
+
+setInterval(updateCountdown,1000);
+
+updateCountdown();
+
+</script>
+
+<style>
+.flash{
+    animation:flash .4s;
+}
+
+@keyframes flash{
+    0%{background:#fff;}
+    100%{background:transparent;}
+}
+</style>
+<audio id="beep" preload="auto">
+    <source src="/static/sounds/beep.mp3" type="audio/mpeg">
+</audio>
+</body>
+</html>

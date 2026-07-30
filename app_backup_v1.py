@@ -1,7 +1,7 @@
 from flask import Flask, render_template, request, redirect, url_for, session
 from werkzeug.utils import secure_filename
 from datetime import datetime
-import sqlite3
+import json
 import os
 import uuid
 import random
@@ -10,32 +10,27 @@ import string
 app = Flask(__name__)
 app.secret_key = "birthday_secret_2026"
 
-DB = "birthday.db"
+DATA_FILE = "data.json"
 
-def get_db():
-    conn = sqlite3.connect(DB)
-    conn.row_factory = sqlite3.Row
-    return conn
+
+def load_data():
+    with open(DATA_FILE, "r", encoding="utf-8") as f:
+        return json.load(f)
+
+
+def save_data(data):
+    with open(DATA_FILE, "w", encoding="utf-8") as f:
+        json.dump(data, f, indent=4, ensure_ascii=False)
+
 
 def get_birthdays():
-    conn = get_db()
-    birthdays = conn.execute(
-        "SELECT * FROM birthdays"
-    ).fetchall()
-    conn.close()
-    return [dict(row) for row in birthdays]
+    data = load_data()
+    return data["birthdays"]
 
 
 def get_admin():
-    conn = get_db()
-
-    admin = conn.execute(
-        "SELECT * FROM admin LIMIT 1"
-    ).fetchone()
-
-    conn.close()
-
-    return dict(admin)
+    data = load_data()
+    return data["admin"]
 
 
 @app.route("/")
@@ -57,20 +52,14 @@ def home():
 @app.route("/birthday/<slug>")
 def birthday_page(slug):
 
-    conn = get_db()
+    data = load_data()
 
-    birthday = conn.execute(
-        "SELECT * FROM birthdays WHERE slug=?",
-        (slug,)
-    ).fetchone()
-
-    conn.close()
-
-    if birthday:
-        return render_template(
-            "index.html",
-            data=dict(birthday)
-        )
+    for b in data["birthdays"]:
+        if b.get("slug") == slug:
+            return render_template(
+                "index.html",
+                data=b
+            )
 
     return "Birthday Not Found"
 
@@ -177,6 +166,8 @@ def create():
     if not session.get("admin"):
         return redirect("/admin")
 
+    data = load_data()
+
     photo_name = ""
     music_name = ""
     background_name = ""
@@ -192,36 +183,29 @@ def create():
         music.save(os.path.join("static/uploads/music", music_name))
 
     background = request.files.get("background")
+
     if background and background.filename:
         background_name = secure_filename(background.filename)
         background.save(
             os.path.join("static/uploads/backgrounds", background_name)
-        )
+    )
 
-    conn = get_db()
+    new_birthday = {
+        "id": str(uuid.uuid4()),
+        "slug": generate_slug(),
+        "name": request.form.get("name"),
+        "wish": request.form.get("wish"),
+        "code": request.form.get("code"),
+        "photo": photo_name,
+        "music": music_name,
+        "background": background_name,
+        "unlock_date": request.form.get("unlock_date"),
+	"unlock_time": request.form.get("unlock_time"),
+    }
 
-    conn.execute("""
-        INSERT INTO birthdays(
-            id, slug, name, wish, code,
-            photo, music, background,
-            unlock_date, unlock_time
-        )
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    """, (
-        str(uuid.uuid4()),
-        generate_slug(),
-        request.form.get("name"),
-        request.form.get("wish"),
-        request.form.get("code"),
-        photo_name,
-        music_name,
-        background_name,
-        request.form.get("unlock_date"),
-        request.form.get("unlock_time")
-    ))
+    data["birthdays"].append(new_birthday)
 
-    conn.commit()
-    conn.close()
+    save_data(data)
 
     return redirect("/dashboard")
 
@@ -231,62 +215,49 @@ def edit(birthday_id):
     if not session.get("admin"):
         return redirect("/admin")
 
-    conn = get_db()
+    data = load_data()
 
-    birthday = conn.execute(
-        "SELECT * FROM birthdays WHERE id=?",
-        (birthday_id,)
-    ).fetchone()
+    birthday = None
+
+    for b in data["birthdays"]:
+        if b["id"] == birthday_id:
+            birthday = b
+            break
 
     if birthday is None:
-        conn.close()
         return "Birthday Not Found"
 
     if request.method == "POST":
 
-        conn.execute("""
-            UPDATE birthdays
-            SET name=?,
-                wish=?,
-                code=?
-            WHERE id=?
-        """, (
-            request.form.get("name"),
-            request.form.get("wish"),
-            request.form.get("code"),
-            birthday_id
-        ))
+        birthday["name"] = request.form.get("name")
+        birthday["wish"] = request.form.get("wish")
+        birthday["code"] = request.form.get("code")
 
-        conn.commit()
-        conn.close()
+        save_data(data)
 
         return redirect("/dashboard")
-
-    birthday = dict(birthday)
-    conn.close()
 
     return render_template(
         "edit.html",
         birthday=birthday
     )
-
 @app.route("/delete/<birthday_id>")
 def delete(birthday_id):
 
     if not session.get("admin"):
         return redirect("/admin")
 
-    conn = get_db()
+    data = load_data()
 
-    conn.execute(
-        "DELETE FROM birthdays WHERE id=?",
-        (birthday_id,)
-    )
+    data["birthdays"] = [
+        b for b in data["birthdays"]
+        if b["id"] != birthday_id
+    ]
 
-    conn.commit()
-    conn.close()
+    save_data(data)
 
     return redirect("/dashboard")
+
 
 @app.route("/change-admin-password", methods=["POST"])
 def change_admin_password():
@@ -294,20 +265,14 @@ def change_admin_password():
     if not session.get("admin"):
         return redirect("/admin")
 
-    conn = get_db()
+    data = load_data()
 
-    conn.execute(
-        "UPDATE admin SET password=? WHERE username=?",
-        (
-            request.form.get("password"),
-            "admin"
-        )
-    )
+    data["admin"]["password"] = request.form.get("password")
 
-    conn.commit()
-    conn.close()
+    save_data(data)
 
     return redirect("/dashboard")
+
 
 if __name__ == "__main__":
     app.run(debug=True)

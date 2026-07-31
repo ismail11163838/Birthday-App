@@ -17,10 +17,16 @@ function showWish() {
     flowerRain();
 }
 
+let countdownRunning = false;
 function startCountdown() {
+
+    if (countdownRunning) return;
+
+    countdownRunning = true;
 
     let count = 3;
 
+    // বাকি কোড আগের মতো থাকবে...
     let box = document.createElement("div");
 
     box.id = "countdown";
@@ -57,7 +63,8 @@ function startCountdown() {
 
             setTimeout(() => {
                 box.remove();
-            },2000);
+                countdownRunning = false;
+}, 2000);
 
         }
 
